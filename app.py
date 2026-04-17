@@ -367,7 +367,7 @@ if __name__ == '__main__':
 # Debounce: collect rapid messages from same user before replying
 _user_debounce = {}
 _debounce_lock = threading.Lock()
-DEBOUNCE_SECS = 2.5
+DEBOUNCE_SECS = 5
 
 
 def get_claude_reply(user_id, combined_message):
