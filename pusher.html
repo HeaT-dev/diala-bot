@@ -1,0 +1,58 @@
+<\!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Diala Bot Pusher</title>
+<style>
+body{font-family:sans-serif;max-width:640px;margin:40px auto;padding:20px;background:#f5f5f5}
+h2{color:#333}
+label{display:block;font-weight:bold;margin-top:12px}
+input,textarea{width:100%;padding:8px;margin-top:4px;box-sizing:border-box;font-family:monospace;font-size:12px;border:1px solid #ccc;border-radius:4px}
+button{margin-top:16px;padding:12px 28px;background:#2ea44f;color:white;border:none;border-radius:6px;cursor:pointer;font-size:15px;font-weight:bold}
+button:hover{background:#22863a}
+button:disabled{background:#999;cursor:default}
+pre{background:#1e1e1e;color:#d4d4d4;padding:12px;border-radius:6px;margin-top:16px;min-height:60px;white-space:pre-wrap;word-break:break-all;font-size:12px}
+</style>
+</head>
+<body>
+<h2>🚀 Diala Bot Pusher</h2>
+<label>GitHub Token:
+<input type="password" id="tok" placeholder="ghp_..."></label>
+<label>Base64-encoded app.py content:
+<textarea id="b64" rows="5" placeholder="Paste the base64 string here..."></textarea></label>
+<button id="btn" onclick="push()">⬆ Push app.py to GitHub</button>
+<pre id="log">Ready.</pre>
+<script>
+const REPO='HEaT-dev/diala-bot', FILE='app.py';
+const log=m=>{document.getElementById('log').textContent+='\n'+m;};
+async function push(){
+  const btn=document.getElementById('btn');
+  const tok=document.getElementById('tok').value.trim();
+  const b64=document.getElementById('b64').value.trim();
+  if(\!tok||\!b64){log('❌ Fill in token and base64\!');return;}
+  btn.disabled=true; btn.textContent='Pushing...';
+  document.getElementById('log').textContent='';
+  try{
+    log('📡 Fetching current SHA...');
+    const r1=await fetch('https://api.github.com/repos/'+REPO+'/contents/'+FILE,
+      {headers:{'Authorization':'token '+tok,'Accept':'application/vnd.github.v3+json'}});
+    const info=await r1.json();
+    if(\!info.sha){log('❌ Could not get SHA:\n'+JSON.stringify(info,null,2));btn.disabled=false;btn.textContent='⬆ Push app.py to GitHub';return;}
+    log('✅ SHA: '+info.sha.slice(0,12)+'...');
+    log('📤 Pushing new content...');
+    const r2=await fetch('https://api.github.com/repos/'+REPO+'/contents/'+FILE,{
+      method:'PUT',
+      headers:{'Authorization':'token '+tok,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},
+      body:JSON.stringify({message:'Update app.py via pusher tool',content:b64,sha:info.sha})
+    });
+    const res=await r2.json();
+    if(r2.ok){
+      log('✅ DONE\! Commit: '+res.commit.sha);
+      log('🚂 Railway redeploy triggered automatically.');
+    } else {
+      log('❌ GitHub error: '+JSON.stringify(res,null,2));
+    }
+  }catch(e){log('❌ Exception: '+e);}
+  btn.disabled=false; btn.textContent='⬆ Push app.py to GitHub';
+}
+</script>
+</body>
+</html>
