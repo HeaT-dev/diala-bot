@@ -1,4 +1,4 @@
-<\!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><title>Diala Bot Editor</title>
 <style>
@@ -34,14 +34,14 @@ let sha='';
 const st=(m,cls)=>{const s=document.getElementById('status');s.textContent=m;s.className=cls||''};
 async function loadFile(){
   const tok=document.getElementById('tok').value.trim();
-  if(\!tok){st('Enter token first','err');return;}
+  if(!tok){st('Enter token first','err');return;}
   document.getElementById('loadBtn').disabled=true;
   st('Loading...');
   try{
     const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/'+FILE,
       {headers:{'Authorization':'token '+tok,'Accept':'application/vnd.github.v3+json'}});
     const info=await r.json();
-    if(\!info.sha){st('Load failed: '+JSON.stringify(info),'err');document.getElementById('loadBtn').disabled=false;return;}
+    if(!info.sha){st('Load failed: '+JSON.stringify(info),'err');document.getElementById('loadBtn').disabled=false;return;}
     sha=info.sha;
     // Decode base64 → UTF-8
     const bytes=Uint8Array.from(atob(info.content.replace(/\n/g,'')),c=>c.charCodeAt(0));
@@ -55,7 +55,7 @@ async function loadFile(){
 async function pushFile(){
   const tok=document.getElementById('tok').value.trim();
   const text=document.getElementById('code').value;
-  if(\!tok||\!sha){st('Load file first','err');return;}
+  if(!tok||!sha){st('Load file first','err');return;}
   document.getElementById('pushBtn').disabled=true;
   st('Pushing...');
   // Encode UTF-8 → base64
@@ -70,7 +70,7 @@ async function pushFile(){
     const res=await r.json();
     if(r.ok){
       sha=res.commit.sha;
-      st('✅ Pushed\! Commit: '+res.commit.sha.slice(0,8)+' — Railway redeploy triggered','ok');
+      st('✅ Pushed! Commit: '+res.commit.sha.slice(0,8)+' — Railway redeploy triggered','ok');
     }else{
       st('❌ GitHub error: '+JSON.stringify(res),'err');
     }
