@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 import anthropic
 import os
+import threading
+import time
 from collections import defaultdict
 
 app = Flask(__name__)
@@ -360,4 +362,82 @@ def health():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port)"""
+
+# Debounce: collect rapid messages from same user before replying
+_user_debounce = {}
+_debounce_lock = threading.Lock()
+DEBOUNCE_SECS = 2.5
+
+
+def get_claude_reply(user_id, combined_message):
+    conversation_history[user_id].append({
+        "role": "user",
+        "content": combined_message
+    })
+    if len(conversation_history[user_id]) > MAX_TURNS * 2:
+        conversation_history[user_id] = conversation_history[user_id][-(MAX_TURNS * 2):]
+    response = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=1000,
+        system=SYSTEM_PROMPT,
+        messages=conversation_history[user_id]
+    )
+    reply = response.content[0].text
+    conversation_history[user_id].append({
+        "role": "assistant",
+        "content": reply
+    })
+    return reply
+
+
+@app.route('/chat', methods=['POST'])
+def chat():
+    data = request.get_json(silent=True) or request.form.to_dict()
+    if not data:
+        return jsonify({"reply": ""})
+    user_id = str(data.get('user_id', '')).strip()
+    message = str(data.get('message', '')).strip()
+    if not user_id or not message:
+        return jsonify({"reply": ""})
+
+    with _debounce_lock:
+        if user_id not in _user_debounce:
+            _user_debounce[user_id] = {
+                'messages': [],
+                'processing': False,
+                'lock': threading.Lock()
+            }
+        state = _user_debounce[user_id]
+
+    with state['lock']:
+        state['messages'].append(message)
+        is_leader = not state['processing']
+        if is_leader:
+            state['processing'] = True
+
+    if not is_leader:
+        # Another request is already waiting - queue the message and return empty
+        return jsonify({"reply": ""})
+
+    # Leader: wait for debounce window to collect any rapid follow-up messages
+    time.sleep(DEBOUNCE_SECS)
+
+    with state['lock']:
+        all_msgs = state['messages'].copy()
+        state['messages'] = []
+        state['processing'] = False
+
+    combined = '\n'.join(all_msgs)
+    reply = get_claude_reply(user_id, combined)
+    return jsonify({"reply": reply})
+
+
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({"status": "ok"})
+
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, threaded=True)
