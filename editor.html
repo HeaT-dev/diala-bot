@@ -1,0 +1,82 @@
+<\!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Diala Bot Editor</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:sans-serif;margin:0;background:#1e1e1e;color:#d4d4d4;height:100vh;display:flex;flex-direction:column}
+#top{display:flex;align-items:center;gap:10px;padding:10px 16px;background:#252526;border-bottom:1px solid #444;flex-shrink:0}
+#top h2{margin:0;font-size:16px;color:#fff}
+#tok{padding:6px 10px;background:#3c3c3c;border:1px solid #555;color:#d4d4d4;border-radius:4px;font-size:13px;width:280px}
+button{padding:7px 16px;border:none;border-radius:4px;cursor:pointer;font-size:13px;font-weight:600}
+#loadBtn{background:#0e639c;color:#fff}
+#loadBtn:hover{background:#1177bb}
+#pushBtn{background:#2ea44f;color:#fff}
+#pushBtn:hover{background:#22863a}
+#pushBtn:disabled,#loadBtn:disabled{background:#555;cursor:default;color:#999}
+#status{font-size:12px;color:#888;margin-left:auto}
+#status.ok{color:#4ec9b0}
+#status.err{color:#f48771}
+#code{flex:1;width:100%;padding:12px 16px;background:#1e1e1e;color:#d4d4d4;border:none;font-family:'Consolas','Courier New',monospace;font-size:13px;line-height:1.5;resize:none;outline:none;overflow:auto}
+</style>
+</head>
+<body>
+<div id="top">
+  <h2>🤖 Diala Bot Editor</h2>
+  <input type="password" id="tok" placeholder="GitHub token (ghp_...)" >
+  <button id="loadBtn" onclick="loadFile()">⬇ Load app.py</button>
+  <button id="pushBtn" onclick="pushFile()" disabled>⬆ Push to GitHub</button>
+  <span id="status">Not loaded</span>
+</div>
+<textarea id="code" spellcheck="false" placeholder="Click 'Load app.py' to fetch the current code..."></textarea>
+<script>
+const REPO='HEaT-dev/diala-bot', FILE='app.py';
+let sha='';
+const st=(m,cls)=>{const s=document.getElementById('status');s.textContent=m;s.className=cls||''};
+async function loadFile(){
+  const tok=document.getElementById('tok').value.trim();
+  if(\!tok){st('Enter token first','err');return;}
+  document.getElementById('loadBtn').disabled=true;
+  st('Loading...');
+  try{
+    const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/'+FILE,
+      {headers:{'Authorization':'token '+tok,'Accept':'application/vnd.github.v3+json'}});
+    const info=await r.json();
+    if(\!info.sha){st('Load failed: '+JSON.stringify(info),'err');document.getElementById('loadBtn').disabled=false;return;}
+    sha=info.sha;
+    // Decode base64 → UTF-8
+    const bytes=Uint8Array.from(atob(info.content.replace(/\n/g,'')),c=>c.charCodeAt(0));
+    const text=new TextDecoder('utf-8').decode(bytes);
+    document.getElementById('code').value=text;
+    document.getElementById('pushBtn').disabled=false;
+    st('Loaded ✓ (SHA: '+sha.slice(0,8)+'...)','ok');
+  }catch(e){st('Error: '+e,'err');}
+  document.getElementById('loadBtn').disabled=false;
+}
+async function pushFile(){
+  const tok=document.getElementById('tok').value.trim();
+  const text=document.getElementById('code').value;
+  if(\!tok||\!sha){st('Load file first','err');return;}
+  document.getElementById('pushBtn').disabled=true;
+  st('Pushing...');
+  // Encode UTF-8 → base64
+  const bytes=new TextEncoder().encode(text);
+  const b64=btoa(Array.from(bytes,b=>String.fromCharCode(b)).join(''));
+  try{
+    const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/'+FILE,{
+      method:'PUT',
+      headers:{'Authorization':'token '+tok,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},
+      body:JSON.stringify({message:'Update app.py via Diala Bot Editor',content:b64,sha:sha})
+    });
+    const res=await r.json();
+    if(r.ok){
+      sha=res.commit.sha;
+      st('✅ Pushed\! Commit: '+res.commit.sha.slice(0,8)+' — Railway redeploy triggered','ok');
+    }else{
+      st('❌ GitHub error: '+JSON.stringify(res),'err');
+    }
+  }catch(e){st('❌ '+e,'err');}
+  document.getElementById('pushBtn').disabled=false;
+}
+</script>
+</body>
+</html>
