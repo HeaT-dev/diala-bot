@@ -43,12 +43,12 @@ async function loadFile(){
     const info=await r.json();
     if(!info.sha){st('Load failed: '+JSON.stringify(info),'err');document.getElementById('loadBtn').disabled=false;return;}
     sha=info.sha;
-    // Decode base64 → UTF-8
+    // Decode base64 -> UTF-8
     const bytes=Uint8Array.from(atob(info.content.replace(/\n/g,'')),c=>c.charCodeAt(0));
     const text=new TextDecoder('utf-8').decode(bytes);
     document.getElementById('code').value=text;
     document.getElementById('pushBtn').disabled=false;
-    st('Loaded ✓ (SHA: '+sha.slice(0,8)+'...)','ok');
+    st('Loaded OK (SHA: '+sha.slice(0,8)+'...)','ok');
   }catch(e){st('Error: '+e,'err');}
   document.getElementById('loadBtn').disabled=false;
 }
@@ -58,7 +58,7 @@ async function pushFile(){
   if(!tok||!sha){st('Load file first','err');return;}
   document.getElementById('pushBtn').disabled=true;
   st('Pushing...');
-  // Encode UTF-8 → base64
+  // Encode UTF-8 -> base64
   const bytes=new TextEncoder().encode(text);
   const b64=btoa(Array.from(bytes,b=>String.fromCharCode(b)).join(''));
   try{
@@ -70,11 +70,11 @@ async function pushFile(){
     const res=await r.json();
     if(r.ok){
       sha=res.commit.sha;
-      st('✅ Pushed! Commit: '+res.commit.sha.slice(0,8)+' — Railway redeploy triggered','ok');
+      st('[OK] Pushed! Commit: '+res.commit.sha.slice(0,8)+' - Railway redeploy triggered','ok');
     }else{
-      st('❌ GitHub error: '+JSON.stringify(res),'err');
+      st('[ERR] GitHub error: '+JSON.stringify(res),'err');
     }
-  }catch(e){st('❌ '+e,'err');}
+  }catch(e){st('[ERR] '+e,'err');}
   document.getElementById('pushBtn').disabled=false;
 }
 </script>
