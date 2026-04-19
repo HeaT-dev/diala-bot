@@ -1,8 +1,6 @@
 from flask import Flask, request, jsonify
 import anthropic
 import os
-import threading
-import time
 from collections import defaultdict
 
 app = Flask(__name__)
@@ -364,32 +362,6 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)"""
 
-# Debounce: collect rapid messages from same user before replying
-_user_debounce = {}
-_debounce_lock = threading.Lock()
-DEBOUNCE_SECS = 5
-
-
-def get_claude_reply(user_id, combined_message):
-    conversation_history[user_id].append({
-        "role": "user",
-        "content": combined_message
-    })
-    if len(conversation_history[user_id]) > MAX_TURNS * 2:
-        conversation_history[user_id] = conversation_history[user_id][-(MAX_TURNS * 2):]
-    response = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=1000,
-        system=SYSTEM_PROMPT,
-        messages=conversation_history[user_id]
-    )
-    reply = response.content[0].text
-    conversation_history[user_id].append({
-        "role": "assistant",
-        "content": reply
-    })
-    return reply
-
 
 @app.route('/chat', methods=['POST'])
 def chat():
@@ -398,38 +370,36 @@ def chat():
         return jsonify({"reply": ""})
     user_id = str(data.get('user_id', '')).strip()
     message = str(data.get('message', '')).strip()
+
     if not user_id or not message:
         return jsonify({"reply": ""})
 
-    with _debounce_lock:
-        if user_id not in _user_debounce:
-            _user_debounce[user_id] = {
-                'messages': [],
-                'processing': False,
-                'lock': threading.Lock()
-            }
-        state = _user_debounce[user_id]
+    # Add new user message to history
+    conversation_history[user_id].append({
+        "role": "user",
+        "content": message
+    })
 
-    with state['lock']:
-        state['messages'].append(message)
-        is_leader = not state['processing']
-        if is_leader:
-            state['processing'] = True
+    # Trim history to last MAX_TURNS exchanges (MAX_TURNS * 2 messages)
+    if len(conversation_history[user_id]) > MAX_TURNS * 2:
+        conversation_history[user_id] = conversation_history[user_id][-(MAX_TURNS * 2):]
 
-    if not is_leader:
-        # Another request is already waiting - queue the message and return empty
-        return jsonify({"reply": ""})
+    # Call Claude with full history
+    response = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=1000,
+        system=SYSTEM_PROMPT,
+        messages=conversation_history[user_id]
+    )
 
-    # Leader: wait for debounce window to collect any rapid follow-up messages
-    time.sleep(DEBOUNCE_SECS)
+    reply = response.content[0].text
 
-    with state['lock']:
-        all_msgs = state['messages'].copy()
-        state['messages'] = []
-        state['processing'] = False
+    # Save Claude's reply to history
+    conversation_history[user_id].append({
+        "role": "assistant",
+        "content": reply
+    })
 
-    combined = '\n'.join(all_msgs)
-    reply = get_claude_reply(user_id, combined)
     return jsonify({"reply": reply})
 
 
@@ -440,4 +410,4 @@ def health():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, threaded=True)
+    app.run(host='0.0.0.0', port=port)
