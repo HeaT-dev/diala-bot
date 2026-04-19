@@ -317,12 +317,14 @@ Feedback 100 | Feedback 200 | Feedback 300
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    data = request.get_json()
-    user_id = data.get('user_id')
-    message = data.get('message', '').strip()
+    data = request.get_json(silent=True) or request.form.to_dict()
+    if not data:
+        return jsonify({"reply": ""})
+    user_id = str(data.get('user_id', '')).strip()
+    message = str(data.get('message', '')).strip()
 
     if not user_id or not message:
-        return jsonify({"error": "Missing user_id or message"}), 400
+        return jsonify({"reply": ""})
 
     # Add new user message to history
     conversation_history[user_id].append({
