@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import anthropic
 import os
+import logging
 from collections import defaultdict
 
 app = Flask(__name__)
@@ -317,6 +318,7 @@ Feedback 100 | Feedback 200 | Feedback 300
 
 @app.route('/chat', methods=['POST'])
 def chat():
+    app.logger.warning('RAW_BODY: ' + request.get_data(as_text=True)[:300])
     data = request.get_json(silent=True) or request.form.to_dict()
     if not data:
         return jsonify({"reply": "\u200B"})
