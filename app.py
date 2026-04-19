@@ -319,12 +319,12 @@ Feedback 100 | Feedback 200 | Feedback 300
 def chat():
     data = request.get_json(silent=True) or request.form.to_dict()
     if not data:
-        return jsonify({"reply": ""})
+        return jsonify({"reply": "\u200B"})
     user_id = str(data.get('user_id', '')).strip()
     message = str(data.get('message', '')).strip()
 
     if not user_id or not message:
-        return jsonify({"reply": ""})
+        return jsonify({"reply": "\u200B"})
 
     # Add new user message to history
     conversation_history[user_id].append({
