@@ -344,12 +344,13 @@ https://revolut.me/ricard4hg6
 
 @app.route('/chat', methods=['POST'])
 def chat():
+    print(f"[DEBUG-RAW] body={request.get_data(as_text=True)[:300]}", flush=True)
     data = request.get_json(silent=True) or request.form.to_dict()
     if not data:
         return jsonify({"reply": "\u200B"})
     user_id = str(data.get('user_id', '')).strip()
     message = str(data.get('message', '')).strip()
-    print(f"[DEBUG] user_id={repr(user_id)} message={repr(message)} raw_data={data}", flush=True)
+    print(f"[DEBUG] user_id={repr(user_id)} message={repr(message)}", flush=True)
 
     if not user_id:
         return jsonify({"reply": "\u200B"})
