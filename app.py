@@ -376,8 +376,15 @@ def chat():
 
     if not user_id:
         return jsonify({"reply": "\u200B"})
+
+    # Silently ignore non-text messages (stickers, images, audio, reels, etc.)
+    message_type = str(data.get('type', 'text')).lower()
+    attachments = data.get('attachments') or data.get('attachment')
+    if message_type not in ('text', '') or attachments:
+        return jsonify({"reply": "\u200B"})
+
     if not message:
-        return jsonify({"reply": "يبدو إن رسالتك ما وصلت صح 😊 ممكن تعيد إرسالها بدون ما تضغط Enter؟"})
+        return jsonify({"reply": "\u200B"})
 
     # Add new user message to history
     conversation_history[user_id].append({
