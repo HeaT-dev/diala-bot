@@ -349,6 +349,7 @@ def chat():
         return jsonify({"reply": "\u200B"})
     user_id = str(data.get('user_id', '')).strip()
     message = str(data.get('message', '')).strip()
+    print(f"[DEBUG] user_id={repr(user_id)} message={repr(message)} raw_data={data}", flush=True)
 
     if not user_id:
         return jsonify({"reply": "\u200B"})
