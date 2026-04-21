@@ -379,6 +379,13 @@ def chat():
     if not user_id:
         return jsonify({"reply": "\u200B"})
 
+    # Seed mode: store context without calling Claude (for keyword automation pre-seeding)
+    if request.args.get('seed') == 'true':
+        if message:
+            conversation_history[user_id].append({"role": "user", "content": message})
+            conversation_history[user_id].append({"role": "assistant", "content": "[\u062a\u0645 \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u0631\u0633\u0627\u0644\u0629 \u0627\u0644\u0623\u0648\u0644\u0649 \u062a\u0644\u0642\u0627\u0626\u064a\u0627\u064b \u2014 \u0644\u0627 \u062a\u0639\u064a\u062f\u0647\u0627]"})
+        return jsonify({"reply": "\u200B"})
+
     # Handle non-text messages
     message_type = str(data.get('type', 'text')).lower()
     attachments = data.get('attachments') or data.get('attachment')
