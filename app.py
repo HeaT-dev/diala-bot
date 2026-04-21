@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 import anthropic
 import os
 from collections import defaultdict
+import threading
 
 app = Flask(__name__)
 client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
@@ -9,6 +10,16 @@ client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 # Conversation history per user: {user_id: [{"role": ..., "content": ...}]}
 conversation_history = defaultdict(list)
 MAX_TURNS = 20  # Remember last 20 exchanges
+
+# Per-user locks: ensure messages from the same user process one at a time
+_user_locks = {}
+_user_locks_mutex = threading.Lock()
+
+def get_user_lock(user_id):
+    with _user_locks_mutex:
+        if user_id not in _user_locks:
+            _user_locks[user_id] = threading.Lock()
+        return _user_locks[user_id]
 
 SYSTEM_PROMPT = """أنت المنسقة — مسؤولة خدمة العملاء لكورسات محادثة إنجليزي أونلاين على إنستغرام.
 
@@ -413,33 +424,36 @@ def chat():
     if not message:
         return jsonify({"reply": "\u200B"})
 
-    # Add new user message to history
-    conversation_history[user_id].append({
-        "role": "user",
-        "content": message
-    })
-
-    # Trim history to last MAX_TURNS exchanges (MAX_TURNS * 2 messages)
-    if len(conversation_history[user_id]) > MAX_TURNS * 2:
-        conversation_history[user_id] = conversation_history[user_id][-(MAX_TURNS * 2):]
-
-    # Call Claude with full history
-    response = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=1000,
-        system=SYSTEM_PROMPT,
-        messages=conversation_history[user_id]
-    )
-
-    reply = response.content[0].text
-
-    # Save Claude's reply to history
-    conversation_history[user_id].append({
-        "role": "assistant",
-        "content": reply
-    })
-
-    return jsonify({"reply": reply})
+    # Acquire per-user lock so rapid messages are processed sequentially
+    user_lock = get_user_lock(user_id)
+    with user_lock:
+        # Add new user message to history
+        conversation_history[user_id].append({
+            "role": "user",
+            "content": message
+        })
+    
+        # Trim history to last MAX_TURNS exchanges (MAX_TURNS * 2 messages)
+        if len(conversation_history[user_id]) > MAX_TURNS * 2:
+            conversation_history[user_id] = conversation_history[user_id][-(MAX_TURNS * 2):]
+    
+        # Call Claude with full history
+        response = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=1000,
+            system=SYSTEM_PROMPT,
+            messages=conversation_history[user_id]
+        )
+    
+        reply = response.content[0].text
+    
+        # Save Claude's reply to history
+        conversation_history[user_id].append({
+            "role": "assistant",
+            "content": reply
+        })
+    
+        return jsonify({"reply": reply})
 
 
 @app.route('/health', methods=['GET'])
