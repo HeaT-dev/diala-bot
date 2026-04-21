@@ -5,7 +5,7 @@ import threading
 from collections import defaultdict
 
 app = Flask(__name__)
-client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"), max_retries=0)
 
 # Conversation history per user: {user_id: [{"role": ..., "content": ...}]}
 conversation_history = defaultdict(list)
@@ -463,6 +463,11 @@ def chat():
         })
 
         return jsonify({"reply": reply})
+    except anthropic.RateLimitError:
+        # Remove the queued user message — let them retry cleanly
+        if conversation_history[user_id] and conversation_history[user_id][-1]["role"] == "user":
+            conversation_history[user_id].pop()
+        return jsonify({"reply": "عذراً، أنا مشغولة الآن. أرسل رسالتك مرة أخرى بعد ثانية."})
     finally:
         lock.release()
 
