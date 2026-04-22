@@ -5,7 +5,7 @@ import threading
 from collections import defaultdict
 
 app = Flask(__name__)
-client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"), max_retries=0)
+client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"), max_retries=0, default_headers={"anthropic-beta": "extended-cache-ttl-2025-04-11"})
 
 # Conversation history per user: {user_id: [{"role": ..., "content": ...}]}
 conversation_history = defaultdict(list)
@@ -249,7 +249,7 @@ def chat():
             system=[{
                 "type": "text",
                 "text": SYSTEM_PROMPT,
-                "cache_control": {"type": "ephemeral"}
+                "cache_control": {"type": "ephemeral", "ttl": "1h"}
             }],
             messages=conversation_history[user_id]
         )
