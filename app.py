@@ -195,13 +195,16 @@ B1+: وجههم مباشرة لكورس المحادثة
 كم وقت أحتاج حتى أتحسن؟ هاد بيختلف من شخص لشخص — حسب مستواك ووقتك وهدفك. بس رح تحس بتحسن واضح وبسرعة — معظم الـ Feedback من طلاب أنهوا شهرهم الأول بس
 خصم؟ ما في خصومات — السعر ثابت وهو أفضل سعر ممكن للجودة اللي بتحصل عليها"""
 
-@app.route('/chat', methods=['POST'])
-def chat():
+def _handle_chat(model):
+    """Shared chat handler — used by both /chat (Sonnet) and /chat-haiku (Haiku)."""
     data = request.get_json(silent=True) or request.form.to_dict()
     if not data:
         return jsonify({"reply": "\u200B"})
 
     user_id = str(data.get('user_id', '')).strip()
+    # Namespace Haiku history separately so it doesn’t mix with Sonnet history
+    if model != "claude-sonnet-4-6":
+        user_id = f"haiku_{user_id}"
     message = str(data.get('message', '')).strip()
 
     if not user_id:
@@ -218,11 +221,9 @@ def chat():
     message_type = str(data.get('type', 'text')).lower()
     attachments = data.get('attachments') or data.get('attachment')
     if message_type not in ('text', '') or attachments:
-        # For images: pass context note to Claude so it can respond based on conversation
         if message_type == 'image' or (attachments and message_type not in ('sticker', 'video', 'audio', 'reel', 'share')):
             message = "[\u0627\u0644\u0634\u062e\u0635 \u0623\u0631\u0633\u0644 \u0635\u0648\u0631\u0629 \u2014 \u0644\u0627 \u062a\u0633\u062a\u0637\u064a\u0639 \u0631\u0624\u064a\u062a\u0647\u0627. \u0631\u062f \u0628\u0646\u0627\u0621\u064b \u0639\u0644\u0649 \u0633\u064a\u0627\u0642 \u0627\u0644\u0645\u062d\u0627\u062f\u062b\u0629: \u0625\u0630\u0627 \u0643\u0646\u0627 \u0641\u064a \u0645\u0631\u062d\u0644\u0629 \u0627\u0644\u062f\u0641\u0639 \u0627\u0639\u062a\u0631\u0641 \u0628\u0648\u0635\u0648\u0644 \u0627\u0644\u0635\u0648\u0631\u0629 \u0648\u0630\u0643\u0651\u0631\u0647 \u0628\u0625\u0631\u0633\u0627\u0644 \u0633\u0643\u0631\u064a\u0646\u0634\u0648\u062a \u0627\u0644\u062f\u0641\u0639 \u0648\u0635\u0648\u0631\u0629 \u0628\u0631\u0648\u0641\u0627\u064a\u0644 \u062d\u0633\u0627\u0628\u0647 \u0639\u0644\u0649 \u0627\u0644\u0641\u064a\u0633\u0628\u0648\u0643 \u0625\u0630\u0627 \u0644\u0645 \u064a\u0631\u0633\u0644\u0647\u0645 \u0628\u0639\u062f\u060c \u0625\u0630\u0627 \u0637\u0644\u0628\u062a \u0645\u0646\u0647 \u0646\u062a\u064a\u062c\u0629 \u0627\u0644\u0627\u062e\u062a\u0628\u0627\u0631 \u0627\u0637\u0644\u0628 \u0645\u0646\u0647 \u0643\u062a\u0627\u0628\u0629 \u0627\u0644\u0631\u0642\u0645 \u0628\u0627\u0644\u0646\u0635]"
         else:
-            # Stickers, videos, audio, reels — stay silent
             return jsonify({"reply": "\u200B"})
 
     if not message:
@@ -231,49 +232,46 @@ def chat():
     lock = _get_user_lock(user_id)
     acquired = lock.acquire(blocking=False)
     if not acquired:
-        # Another message from this user is still processing.
-        # Add to history for context but return immediately so ManyChat doesn't time out.
         conversation_history[user_id].append({"role": "user", "content": message})
         return jsonify({"reply": "\u200B"})
 
     try:
-        # Add new user message to history
-        conversation_history[user_id].append({
-            "role": "user",
-            "content": message
-        })
+        conversation_history[user_id].append({"role": "user", "content": message})
 
-        # Trim history to last MAX_TURNS exchanges (MAX_TURNS * 2 messages)
         if len(conversation_history[user_id]) > MAX_TURNS * 2:
             conversation_history[user_id] = conversation_history[user_id][-(MAX_TURNS * 2):]
 
-        # Call Claude with full history (system prompt cached to save ~90% on prompt tokens)
         response = client.messages.create(
-            model="claude-sonnet-4-6",
+            model=model,
             max_tokens=1000,
             system=[{
                 "type": "text",
                 "text": SYSTEM_PROMPT,
-                "cache_control": {"type": "ephemeral", "ttl": "1h"}
+                "cache_control": {"type": "ephemeral"}
             }],
             messages=conversation_history[user_id]
         )
         reply = response.content[0].text
 
-        # Save Claude's reply to history
-        conversation_history[user_id].append({
-            "role": "assistant",
-            "content": reply
-        })
+        conversation_history[user_id].append({"role": "assistant", "content": reply})
         return jsonify({"reply": reply})
 
     except anthropic.RateLimitError:
-        # Remove the queued user message — let them retry cleanly
         if conversation_history[user_id] and conversation_history[user_id][-1]["role"] == "user":
             conversation_history[user_id].pop()
         return jsonify({"reply": "\u0639\u0630\u0631\u0627\u064b\u060c \u0623\u0646\u0627 \u0645\u0634\u063a\u0648\u0644\u0629 \u0627\u0644\u0622\u0646. \u0623\u0631\u0633\u0644 \u0631\u0633\u0627\u0644\u062a\u0643 \u0645\u0631\u0629 \u0623\u062e\u0631\u0649 \u0628\u0639\u062f \u062b\u0627\u0646\u064a\u0629."})
     finally:
         lock.release()
+
+
+@app.route('/chat', methods=['POST'])
+def chat():
+    return _handle_chat("claude-sonnet-4-6")
+
+
+@app.route('/chat-haiku', methods=['POST'])
+def chat_haiku():
+    return _handle_chat("claude-haiku-4-5-20251001")
 
 
 @app.route('/health', methods=['GET'])
