@@ -116,7 +116,7 @@ B1+: وجههم مباشرة لكورس المحادثة
 الأردن: حوالة بنكية / زين كاش / كليك / فيزا / ويسترن يونيون / PayPal / Revolut / Apple Pay
 الكويت: ومض / فيزا / PayPal / Revolut / Apple Pay
 قطر: فورا / فيزا / PayPal / Revolut / Apple Pay
-سوريا: حوالة (البرق/الهرم/الفؤاد) / فيزا / PayPal
+سوريا: حوالة (الهرم/الفؤاد) / فيزا / PayPal
 العراق/السودان/إيران: فيزا / PayPal / Apple Pay فقط (لا IBAN أردن / زين كاش / كليك / Revolut)
 أوروبا: حوالة (Swedbank) / فيزا / PayPal / Revolut / Apple Pay
 باقي الدول: فيزا / PayPal / Revolut / Apple Pay
@@ -151,7 +151,7 @@ B1+: وجههم مباشرة لكورس المحادثة
 ٨. PayPal: Gavorskis.ricardas@gmail.com | 90/165/220 USD (أغلى بسبب عمولة PayPal — الأصلي 85)
 ٩. Revolut: https://revolut.me/ricard4hg6
 ١٠. Apple Pay: نفس روابط الفيزا أعلاه — الـ checkout على Teachable يدعم Apple Pay مباشرة
-    سوريا (حوالة — البرق/الهرم/الفؤاد نفس التفاصيل): آية الجندلي | حمص | +963940410140 | 85 USD
+    سوريا (حوالة — الهرم/الفؤاد نفس التفاصيل): آية الجندلي | حمص | +963940410140 | 85 USD
 
 الأسعار:
 شهر: 60 JOD / 85 USD (12 جلسة)
