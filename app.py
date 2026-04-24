@@ -206,14 +206,14 @@ def _handle_chat(model):
     # Seed mode: store context without calling Claude (for keyword automation pre-seeding)
     # Call with ?seed=true&context=easy  or  ?seed=true&context=fluent
     SEED_CONTEXTS = {
-        'easy':   '[*E %13'D *A'5JD CH13 'DE(*/&JF 'DE3,D (25 /HD'1 / 18 /JF'1) *DB'&J'K. 'D4.5 J3*C4A .J'1'* 'D*9DE  %0' #(/I 'G*E'E'K ('DE-'/+) #H 'D*/1J( 'DE('41 B/QE CH13 'DE-'/+) ('D*A'5JD 'DC'ED)]',
-        'fluent': '[*E %13'D *A'5JD CH13 'DE-'/+) *DB'&J'K. D' *9/ %13'D FA3 'D*A'5JD  *'(9 EF -J+ *HBA]',
+        'easy':   """[*E %13'D *A'5JD CH13 'DE(*/&JF 'DE3,D (25 /HD'1 / 18 /JF'1) *DB'&J'K. 'D4.5 J3*C4A .J'1'* 'D*9DE  %0' #(/I 'G*E'E'K ('DE-'/+) #H 'D*/1J( 'DE('41 B/QE CH13 'DE-'/+) ('D*A'5JD 'DC'ED)]""",
+        'fluent': """[*E %13'D *A'5JD CH13 'DE-'/+) *DB'&J'K. D' *9/ %13'D FA3 'D*A'5JD  *'(9 EF -J+ *HBA]""",
     }
     if request.args.get('seed') == 'true':
         if message:
             conversation_history[user_id].append({"role": "user", "content": message})
             context = request.args.get('context', '')
-            auto_reply = SEED_CONTEXTS.get(context, '[*E %13'D 1/ *DB'&J  D' *9/G]')
+            auto_reply = SEED_CONTEXTS.get(context, """[*E %13'D 1/ *DB'&J  D' *9/G]""")
             conversation_history[user_id].append({"role": "assistant", "content": auto_reply})
         return jsonify({"reply": "\u200B"})
 
