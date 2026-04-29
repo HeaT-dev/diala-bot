@@ -263,8 +263,8 @@ PayPal — توقيت ذكر السعر المعدّل:
    دول أخرى: اقترحي PayPal أو Revolut
 ٨. PayPal: Gavorskis.ricardas@gmail.com
 ٩. Revolut: https://revolut.me/ricard4hg6
-١٠. Apple Pay: +37061841001 | Ricardas Gavorskis
-١١. سوريا — حوالة محلية: آية حسان الجودي | حمص | +963940410140 | شهر: 85 USD | شهرين: 155 USD | 3 أشهر: 210 USD
+١٠. Apple Pay: استخدمي نفس روابط الفيزا أعلاه (رقم ٦) — Apple Pay متاح مباشرة عند الدفع عبر الرابط
+١١. سوريا — حوالة محلية: آية جندلي | حمص | +963940410140 | شهر: 85 USD | شهرين: 155 USD | 3 أشهر: 210 USD
 </payment_details>
 
 <pricing>
