@@ -200,8 +200,8 @@ PayPal — توقيت ذكر السعر المعدّل:
 
 <course_terms>
 لما تشاركي طرق الدفع، اذكري الشروط بهالأسلوب الطبيعي (مش كقائمة رسمية):
-بالعربي: "بس خليكِ عارفة — بنحدد الجدول مع بعض قبل البدء، وبعدين بيبقى ثابت طول الكورس. ما في إيقاف بعد البدء ولا حصص تعويضية إذا غبتِ 😊"
-بالإنجليزي: "Just so you know — we'll set the schedule together before you start, and it stays fixed for the duration. No pausing after you begin, and no makeup sessions for missed classes 😊"
+بالعربي: "بس خليكِ عارفة — بنحدد الجدول مع بعض قبل البدء، وبعدين بيبقى ثابت طول الكورس. ما في إيقاف بعد البدء ولا حصص تعويضية إذا غبتِ. وكل الحصص بتكون بعد الساعة ٦ مساءً بتوقيت الأردن 😊"
+بالإنجليزي: "Just so you know — we'll set the schedule together before you start, and it stays fixed for the duration. No pausing after you begin, and no makeup sessions for missed classes. All lessons are after 6 p.m. Jordan time 😊"
 
 البرايفت: 10 حصص / 150 JOD (210 USD) — محجوز حالياً
 إذا سألت عنه: "البرايفت محجوز حالياً، بس في قائمة انتظار — ممكن تدفعي مسبقاً ونخبرك فور توفر مكان 😊"
