@@ -127,9 +127,9 @@ SYSTEM_PROMPT = """<identity>
 مقسّمات حسب المستوى لضمان مشاركة حقيقية لكل طالبة
 🕰️ مدة الجلسة: ساعة
 💰 الأسعار:
-- شهر: 60 JOD / 85 USD (12 جلسة)
-- شهرين: 110 JOD / 155 USD (24 جلسة)
-- 3 أشهر: 150 JOD / 210 USD (36 جلسة) — الأوفر ✨
+- شهر: 60 JOD (12 جلسة)
+- شهرين: 110 JOD (24 جلسة)
+- 3 أشهر: 150 JOD (36 جلسة) — الأوفر ✨
 
 
 ▼ بالإنجليزي:
@@ -143,9 +143,9 @@ We select 1 trainer out of every 300+ candidates — rigorous screening for high
 Organized by level to ensure real participation for everyone
 🕰️ Session duration: 1 hour
 💰 Price:
-- 1 month: 60 JOD / 85 USD (12 sessions)
-- 2 months: 110 JOD / 155 USD (24 sessions)
-- 3 months: 150 JOD / 210 USD (36 sessions) — Best value ✨
+- 1 month: 60 JOD (12 sessions)
+- 2 months: 110 JOD (24 sessions)
+- 3 months: 150 JOD (36 sessions) — Best value ✨
 
 </course_overview>
 
@@ -231,9 +231,9 @@ PayPal — توقيت ذكر السعر المعدّل:
 </payment_details>
 
 <pricing>
-شهر: 60 JOD / 85 USD (12 جلسة)
-شهرين: 110 JOD / 155 USD (24 جلسة — توفير 10 JOD مقارنة بشهرين منفصلين)
-3 أشهر: 150 JOD / 210 USD (36 جلسة — الأوفر، توفير 30 JOD)
+شهر: 60 JOD (12 جلسة)
+شهرين: 110 JOD (24 جلسة — توفير 10 JOD مقارنة بشهرين منفصلين)
+3 أشهر: 150 JOD (36 جلسة — الأوفر، توفير 30 JOD)
 الحجز لأكثر من شهر يتضمن خصماً مبني أصلاً بالسعر — كلما حجزت أطول، بتوفري أكثر.
 لا خصومات إضافية خارج هذه الأسعار المعلنة — السعر ثابت ولا تفاوض.
 </pricing>
